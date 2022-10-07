@@ -27,13 +27,19 @@ export default SlackFunction(def, async ({
 }) => {
   const logger = Logger(env.LOG_LEVEL);
 
+  console.info("Inside Setup Function");
+
   const client = SlackAPI(token);
   // Check the existing triggers for this workflow
   const allTriggers = await client.workflows.triggers.list({});
+
+  console.info("After requesting triggers");
+
   let triggerToUpdate = undefined;
   // find the trigger to update
   if (allTriggers.triggers) {
     for (const trigger of allTriggers.triggers) {
+      console.info(`triggerToUpdate: ${JSON.stringify(trigger)}`);
       if (
         trigger.workflow.callback_id === inputs.workflowCallbackId &&
         trigger.event_type === "slack#/events/reaction_added"
@@ -43,10 +49,6 @@ export default SlackFunction(def, async ({
     }
   }
   logger.info(`triggerToUpdate: ${JSON.stringify(triggerToUpdate)}`);
-
-  const channelIds = triggerToUpdate?.channel_ids != undefined
-    ? triggerToUpdate.channel_ids
-    : [];
 
   // Open the modal to configure the channel list to enable this workflow
   await client.views.open({
@@ -73,7 +75,7 @@ export default SlackFunction(def, async ({
               "type": "plain_text",
               "text": "Select channels to add",
             },
-            "initial_channels": channelIds,
+            "initial_channels": [],
             "action_id": "channels",
           },
           "label": {
